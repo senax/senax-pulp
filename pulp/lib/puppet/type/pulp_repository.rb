@@ -18,6 +18,10 @@ Puppet::Type.newtype(:pulp_repository) do
   end
 
   newproperty(:notes) do
+    desc "notes should be a hash"
+    validate do |value|
+      value.is_a? Hash
+    end
   end
 
   newproperty(:package_groups) do

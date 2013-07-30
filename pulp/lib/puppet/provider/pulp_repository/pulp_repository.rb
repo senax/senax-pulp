@@ -140,6 +140,7 @@ puts "self.repolist"
     res[:name] = repo['id']
     res[:display_name] = repo['display_name']
     res[:description] = repo['description']
+    res[:notes] = repo['notes']
     res[:rpms] = repo['content_unit_counts']['rpm']
     res[:package_groups] = repo['content_unit_counts']['package_group']
     importers = JSON.parse(restapi_get("/repositories/#{repo['id']}/importers/"))
@@ -176,6 +177,10 @@ end
 
 def description=(value)
   @property_flush[:description]=value
+end
+
+def notes=(value)
+  @property_flush[:notes]=value
 end
 
   def flush
@@ -219,6 +224,10 @@ else
     if @property_flush[:description]
       puts "update description to #{resource[:description]}"
       delta[:description]=resource[:description]
+    end
+    if @property_flush[:notes]
+      puts "update notes to #{resource[:notes]}"
+      delta[:notes]=resource[:notes]
     end
     if delta
       data={}
