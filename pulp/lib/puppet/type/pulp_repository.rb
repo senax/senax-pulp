@@ -19,32 +19,33 @@ Puppet::Type.newtype(:pulp_repository) do
 
   newproperty(:notes) do
     desc "notes should be a hash"
+    defaultto ({'_repo-type' => 'rpm-repo'})
     validate do |value|
       value.is_a? Hash
     end
   end
 
-  newproperty(:package_groups) do
+  newproperty(:package_groups_ro) do
     validate do |val|
       fail "package_groups is read-only"
     end
   end
 
-  newproperty(:rpms) do
+  newproperty(:rpms_ro) do
     validate do |val|
       fail "rpms is read-only"
     end
   end
  
-  newproperty(:pulp_importers) do
-    validate do |val|
-      fail "pulp_importers is read-only"
+  newproperty(:pulp_importer) do
+    validate do |value|
+      value.is_a? Hash
     end
   end
 
   newproperty(:pulp_distributors) do
-    validate do |val|
-      fail "pulp_distributors is read-only"
+    validate do |value|
+      value.is_a? Hash
     end
   end
 
