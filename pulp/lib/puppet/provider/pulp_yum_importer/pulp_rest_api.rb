@@ -39,13 +39,14 @@ puts "self.instances"
   @rest_user='admin'
   @rest_passwd='admin'
     importers = self.importerlist # get array of all repos
+p importers
     importers.collect do |importer|
       self.new(importer) # create new object for each repo
     end
   end
 
   def self.prefetch(resources)
-#puts "*****************"
+puts "*****************"
     # Prefetching is necessary to use @property_hash inside any setter methods.
     # self.prefetch uses self.instances to gather an array of user instances
     # on the system, and then populates the @property_hash instance variable
@@ -55,7 +56,7 @@ puts "self.instances"
     # to gather the 'is' values for a resource. The downside here is that
     # populating this instance variable for every resource on the system
     # takes time and front-loads your Puppet run.
-#puts "prefetch"
+puts "prefetch"
     found_importers = instances
 #p found_importers
     resources.keys.each do |name|
@@ -66,15 +67,18 @@ puts "self.instances"
   end
 
 def self.importerlist
-puts "importerlist"
+  puts "importerlist"
   raw_repos = restapi_get('/repositories/')
   importerlist = []
 
-config_options_string=[ 'feed_url', 'ssl_ca_cert', 'ssl_client_cert', 'ssl_client_key', 'proxy_pass', 'proxy_user', 'proxy_url', ] 
-config_options_bool=[ 'ssl_verify', 'verify_size', 'verify_checksum', 'newest', 'remove_old', 'purge_orphaned', 'resolve_dependencies', ]
-config_options_int=[ 'proxy_port', 'max_speed', 'num_threads', 'num_old_packages', 'checksum_type', 'num_retries', 'retry_delay', ]
-config_options_array=[ 'skip', ]
-config_options=[config_options_string,config_options_bool,config_options_int,config_options_array].flatten
+  config_options_string=['feed_url', 'ssl_ca_cert', 'ssl_client_cert', 'ssl_client_key',
+    'proxy_pass', 'proxy_user', 'proxy_url', ] 
+  config_options_bool=['ssl_verify', 'verify_size', 'verify_checksum', 'newest',
+    'remove_old', 'purge_orphaned', 'resolve_dependencies', ]
+  config_options_int=['proxy_port', 'max_speed', 'num_threads', 'num_old_packages', 'checksum_type',
+    'num_retries', 'retry_delay', ]
+  config_options_array=[ 'skip', ]
+  config_options=[config_options_string,config_options_bool,config_options_int,config_options_array].flatten
 
   JSON.parse(raw_repos).each do |repo|
     res = {}
@@ -82,14 +86,23 @@ config_options=[config_options_string,config_options_bool,config_options_int,con
     res[:name] = repo['id']
     importers = JSON.parse(restapi_get("/repositories/#{repo['id']}/importers/"))
     importers.each do |imp|
-# from : /usr/lib/pulp/plugins/importers/yum_importer/importer.py
-config_options.each do |prop|
-      res[prop.to_sym]=imp["config"][prop] if imp["config"][prop]
-#res[prop.to_sym]=res[prop.to_sym].to_i if config_options_int.include?(prop)
-#res[prop.to_sym]=res[prop.to_sym].to_s if config_options_string.include?(prop)
-#res[prop.to_sym]=res[prop.to_sym].to_a if config_options_array.include?(prop)
-#res[prop.to_sym]=res[prop.to_sym].eql?('true') if config_options_bool.include?(prop)
-end
+      # from : /usr/lib/pulp/plugins/importers/yum_importer/importer.py
+      config_options.each do |prop|
+        if imp["config"][prop]
+          res[prop.to_sym]=imp["config"][prop]
+#          res[prop.to_sym]=imp["config"][prop].to_s if config_options_int.include?(prop)
+#          res[prop.to_sym]=imp["config"][prop] if config_options_string.include?(prop)
+#          res[prop.to_sym]=imp["config"][prop] if config_options_array.include?(prop)
+#          res[prop.to_sym]=imp["config"][prop].eql?('true') if config_options_bool.include?(prop)
+#          res[prop.to_sym]=res[prop.to_sym].to_i if config_options_int.include?(prop)
+#          res[prop.to_sym]=res[prop.to_sym].to_s if config_options_string.include?(prop)
+#          res[prop.to_sym]=res[prop.to_sym].to_a if config_options_array.include?(prop)
+#          res[prop.to_sym]=res[prop.to_sym].eql?('true') if config_options_bool.include?(prop)
+#puts "after:"
+#p res[prop.to_sym]
+#p res[prop.to_sym].class
+        end
+      end
     end
     importerlist << res
   end 
@@ -106,25 +119,39 @@ def feed_url=(value)
   @property_flush[:feed_url]=value
 end
 
-  def flush
-puts "flush"
+def num_threads=(value)
+  @property_flush[:num_threads]=value
+end
 
+def newest=(value)
+  @property_flush[:newest]=value
+end
+
+def flush
+puts "flush"
+puts "@property_flush"
+p @property_flush
+puts "resource"
+p resource
 #if @property_flush[:create] # should not exist
-    data={}
-    data[:importer_type_id]='yum_importer'
-    data[:importer_config]={}
-config_options_string=[ 'feed_url', 'ssl_ca_cert', 'ssl_client_cert', 'ssl_client_key', 'proxy_pass', 'proxy_user', 'proxy_url', ] 
-config_options_bool=[ 'ssl_verify', 'verify_size', 'verify_checksum', 'newest', 'remove_old', 'purge_orphaned', 'resolve_dependencies', ]
-config_options_int=[ 'proxy_port', 'max_speed', 'num_threads', 'num_old_packages', 'checksum_type', 'num_retries', 'retry_delay', ]
-config_options_array=[ 'skip', ]
-config_options=[config_options_string,config_options_bool,config_options_int,config_options_array].flatten
+  data={}
+  data[:importer_type_id]='yum_importer'
+  data[:importer_config]={}
+  config_options_string=['feed_url', 'ssl_ca_cert', 'ssl_client_cert', 'ssl_client_key',
+    'proxy_pass', 'proxy_user', 'proxy_url', ] 
+  config_options_bool=['ssl_verify', 'verify_size', 'verify_checksum', 'newest',
+    'remove_old', 'purge_orphaned', 'resolve_dependencies', ]
+  config_options_int=['proxy_port', 'max_speed', 'num_threads', 'num_old_packages', 'checksum_type',
+    'num_retries', 'retry_delay', ]
+  config_options_array=[ 'skip', ]
+  config_options=[config_options_string,config_options_bool,config_options_int,config_options_array].flatten
 config_options.each do |prop|
 if resource[prop.to_sym]
 resource[prop.to_sym]=resource[prop.to_sym].to_i if config_options_int.include?(prop)
 resource[prop.to_sym]=resource[prop.to_sym].to_s if config_options_string.include?(prop)
 resource[prop.to_sym]=resource[prop.to_sym].to_a if config_options_array.include?(prop)
 resource[prop.to_sym]=resource[prop.to_sym].eql?('true') if config_options_bool.include?(prop)
-  data[:importer_config][prop.to_sym]=resource[prop.to_sym]
+  data[:importer_config][prop.to_sym]=resource[prop.to_sym] if @property_flush[prop.to_sym]
 end
 end
 puts data.to_json
